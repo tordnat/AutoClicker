@@ -35,6 +35,7 @@ write(0,0,0,1);
 delay(2);
 write(1,0,0,1);
 delay(2);
+write(0,0,0,0);
 }
 
 void onebackstep(){
@@ -54,6 +55,7 @@ write(1,1,0,0);
 delay(2);
 write(1,0,0,1);
 delay(2);
+write(0,0,0,0);
 }
 void clockWise(void){
   int i;
