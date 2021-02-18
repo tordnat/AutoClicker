@@ -1,58 +1,23 @@
 
-// during an alarm the INT pin of the RTC is pulled low
-//
-// this is handy for minimizing power consumption for sensor-like devices, 
-// since they can be started up by this pin on given time intervals.
-
-#include <Stepper.h>
 #include <Wire.h>
 #include "ds3231.h"
+#include <Stepper.h>
 #define A 4
 #define B 5
 #define C 6
 #define D 7
 #define NUMBER_OF_STEPS_PER_REV 512 //divide or multiply to adapt for clicking mechanism
-
 #define BUFF_MAX 256
 
-uint8_t sleep_period = 180;       // the sleep interval in minutes between 2 consecutive alarms/triggerevents
 
-// how often to refresh the info on stdout (ms)
-unsigned long prev = 5000, interval = 5000;
 
-void set_next_alarm(void)
-{
-    struct ts t;
-    unsigned char wakeup_min;
-
-    DS3231_get(&t);
-
-    // calculate the minute when the next alarm will be triggered
-    wakeup_min = (t.min / sleep_period + 1) * sleep_period;
-    if (wakeup_min > 59) {
-        wakeup_min -= 60;
-    }
-
-    // flags define what calendar component to be checked against the current time in order
-    // to trigger the alarm
-    // A2M2 (minutes) (0 to enable, 1 to disable)
-    // A2M3 (hour)    (0 to enable, 1 to disable) 
-    // A2M4 (day)     (0 to enable, 1 to disable)
-    // DY/DT          (dayofweek == 1/dayofmonth == 0)
-    uint8_t flags[4] = { 0, 1, 1, 1 };
-
-    // set Alarm2. only the minute is set since we ignore the hour and day component
-    DS3231_set_a2(wakeup_min, 0, 0, flags);
-
-    // activate Alarm2
-    DS3231_set_creg(DS3231_CONTROL_INTCN | DS3231_CONTROL_A2IE);
-}
 void write(int a,int b,int c,int d){
 digitalWrite(A,a);
 digitalWrite(B,b);
 digitalWrite(C,c);
 digitalWrite(D,d);
 }
+
 
 void onestep(){
 write(1,0,0,0);
@@ -111,7 +76,41 @@ void counterClockWise(void){
 void clickButton(void){
   clockWise();
   counterClockWise();
-  }
+}
+
+uint8_t sleep_period = 5;       // the sleep interval in minutes between 2 consecutive alarms
+
+// how often to refresh the info on stdout (ms)
+unsigned long prev = 5000, interval = 5000;
+
+void set_next_alarm(void)
+{
+    struct ts t;
+    unsigned char wakeup_min;
+
+    DS3231_get(&t);
+
+    // calculate the minute when the next alarm will be triggered
+    wakeup_min = (t.min / sleep_period + 1) * sleep_period;
+    if (wakeup_min > 59) {
+        wakeup_min -= 60;
+    }
+
+    // flags define what calendar component to be checked against the current time in order
+    // to trigger the alarm
+    // A2M2 (minutes) (0 to enable, 1 to disable)
+    // A2M3 (hour)    (0 to enable, 1 to disable) 
+    // A2M4 (day)     (0 to enable, 1 to disable)
+    // DY/DT          (dayofweek == 1/dayofmonth == 0)
+    uint8_t flags[4] = { 0, 1, 1, 1 };
+
+    // set Alarm2. only the minute is set since we ignore the hour and day component
+    DS3231_set_a2(wakeup_min, 0, 0, flags);
+
+    // activate Alarm2
+    DS3231_set_creg(DS3231_CONTROL_INTCN | DS3231_CONTROL_A2IE);
+}
+
 void setup()
 {
     Serial.begin(9600);
@@ -119,12 +118,6 @@ void setup()
     DS3231_init(DS3231_CONTROL_INTCN);
     DS3231_clear_a2f();
     set_next_alarm();
-    pinMode(A,OUTPUT);
-    pinMode(B,OUTPUT);
-    pinMode(C,OUTPUT);
-    pinMode(D,OUTPUT);
-    clockWise();
-    counterClockWise();
 }
 
 void loop()
@@ -148,10 +141,10 @@ void loop()
 
         if (DS3231_triggered_a2()) {
             Serial.println(" -> alarm2 has been triggered");
-            clickButton();
             set_next_alarm();
             // clear a2 alarm flag and let INT go into hi-z
-            DS3231_clear_a2f();          
+            DS3231_clear_a2f(); 
+            clickButton();         
         }
         prev = now;
     }
