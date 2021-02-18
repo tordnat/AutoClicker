@@ -1,0 +1,2 @@
+# AutoClicker
+Sit is stupid. 
