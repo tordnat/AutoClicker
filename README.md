@@ -7,6 +7,6 @@ This code modifies the alarm-clock example-file from the ds3231-library to trigg
 # Hardware
 
 * Arduino Pro Micro
-* ZS-042 RTC-module
+* ZS-042 RTC-module (not for simple)
 * 28byj-48 steppermotor (and driver)
 
